@@ -45,20 +45,38 @@ def load_model(name):
 # File uploader
 uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
 
-# Prediction
 if uploaded_file is not None:
 
+    # Read uploaded dataset
     data = pd.read_csv(uploaded_file)
 
     st.write("Uploaded Dataset:")
     st.write(data.head())
 
+    # Load model
     model = load_model(model_name)
 
-    predictions = model.predict(data)
+    # Apply SAME encoding as training
+    data_encoded = pd.get_dummies(data)
 
+    # Get training columns
+    training_columns = model.feature_names_in_
+
+    # Add missing columns
+    for col in training_columns:
+        if col not in data_encoded.columns:
+            data_encoded[col] = 0
+
+    # Ensure correct order
+    data_encoded = data_encoded[training_columns]
+
+    # Predict
+    predictions = model.predict(data_encoded)
+
+    # Add predictions to original dataset
     data["Prediction"] = predictions
 
     st.write("Prediction Results:")
     st.write(data)
+
 
